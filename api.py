@@ -1,0 +1,50 @@
+from flask import Flask, request, jsonify
+import pickle
+import numpy as np
+import faiss
+from sentence_transformers import SentenceTransformer
+
+app = Flask(__name__)
+
+# Load resources once when the app starts
+with open("quran_model.pkl", "rb") as f:
+    data = pickle.load(f)
+df = data["df"]
+model = SentenceTransformer(data["model_path"])
+index = faiss.read_index("quran_faiss.index")
+
+def search_ayah(query, top_k=5):
+    query_embedding = model.encode([query], convert_to_numpy=True)
+    faiss.normalize_L2(query_embedding)
+
+    distances, indices = index.search(np.array(query_embedding), top_k)
+    results = []
+
+    for score, i in zip(distances[0], indices[0]):
+        ayah_index = i % len(df)
+        row = df.iloc[ayah_index]
+        results.append({
+            "surah_name_en": row['surah_name_en'],
+            "surah_name_roman": row['surah_name_roman'],
+            "surah_no": row['surah_no'],
+            "ayah_no": row['ayah_no_surah'],
+            "juz": row['juz_no'],
+            "ayah_en": row['ayah_en'],
+            "ayah_ar": row['ayah_ar'],
+            "confidence": float(score)
+        })
+    return results
+
+@app.route('/search', methods=['GET'])
+def search():
+    query = request.args.get('query')
+    top_k = int(request.args.get('top_k', 5))
+
+    if not query:
+        return jsonify({"error": "Query parameter is required"}), 400
+
+    results = search_ayah(query, top_k)
+    return jsonify(results)
+
+if __name__ == '__main__':
+    app.run(debug=True)
