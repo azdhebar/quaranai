@@ -13,7 +13,7 @@ df = data["df"]
 model = SentenceTransformer(data["model_path"])
 index = faiss.read_index("quran_faiss.index")
 
-def search_ayah(query, top_k=5):
+def search_ayah(query: str, top_k: int = 5):
     query_embedding = model.encode([query], convert_to_numpy=True)
     faiss.normalize_L2(query_embedding)
 
@@ -21,19 +21,20 @@ def search_ayah(query, top_k=5):
     results = []
 
     for score, i in zip(distances[0], indices[0]):
-        ayah_index = i % len(df)
+        ayah_index = int(i % len(df))  # ensure it's an int
         row = df.iloc[ayah_index]
         results.append({
-            "surah_name_en": row['surah_name_en'],
-            "surah_name_roman": row['surah_name_roman'],
-            "surah_no": row['surah_no'],
-            "ayah_no": row['ayah_no_surah'],
-            "juz": row['juz_no'],
-            "ayah_en": row['ayah_en'],
-            "ayah_ar": row['ayah_ar'],
+            "surah_name_en": str(row["surah_name_en"]),
+            "surah_name_roman": str(row["surah_name_roman"]),
+            "surah_no": int(row["surah_no"]),
+            "ayah_no": int(row["ayah_no_surah"]),
+            "juz": int(row["juz_no"]),
+            "ayah_en": str(row["ayah_en"]),
+            "ayah_ar": str(row["ayah_ar"]),
             "confidence": float(score)
         })
     return results
+
 
 @app.route('/search', methods=['GET'])
 def search():
