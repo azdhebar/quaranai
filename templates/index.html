@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>Quran OCR Search</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 2em auto; }
+        .error { color: red; }
+        .result { margin-top: 1em; border-bottom: 1px solid #ccc; padding-bottom: 1em; }
+    </style>
+</head>
+<body>
+    <h1>Upload Image for Quran OCR Search</h1>
+
+    {% if error %}
+        <p class="error">{{ error }}</p>
+    {% endif %}
+
+    <form method="POST" enctype="multipart/form-data">
+        <input type="file" name="image" accept="image/*" required />
+        <button type="submit">Upload and Search</button>
+    </form>
+
+    {% if query %}
+        <h2>Extracted Text:</h2>
+        <p><em>{{ query }}</em></p>
+    {% endif %}
+
+    {% if results %}
+        <h2>Search Results:</h2>
+        {% for r in results %}
+            <div class="result">
+                <strong>Surah {{ r.surah_name_en }} ({{ r.surah_name_roman }}) - Ayah {{ r.ayah_no }}</strong><br />
+                Arabic: {{ r.ayah_ar }}<br />
+                English: {{ r.ayah_en }}<br />
+                Juz: {{ r.juz }}<br />
+                Confidence score: {{ "%.4f"|format(r.confidence) }}
+            </div>
+        {% endfor %}
+    {% endif %}
+</body>
+</html>
