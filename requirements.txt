@@ -2,4 +2,3 @@ streamlit
 faiss-cpu
 numpy
 sentence_transformers
-pickle
